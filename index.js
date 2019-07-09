@@ -2,28 +2,7 @@ class Game {
     score = 0;
     lines = 0;
     level = 0;
-    playfield = [
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-        [1, 1, 0, 1, 1, 0, 0, 0, 0, 0],
-        [1, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ];
+    playfield = this.createPlayfield();
     activePiece = {
         posX: 0,
         posY: 0,
@@ -33,6 +12,42 @@ class Game {
             [0, 0, 0],
         ],
     };
+
+    getState() {
+        const playfield = this.createPlayfield();
+
+        for (let y = 0; y < this.playfield.length; y++) {
+            playfield[y] = [];
+            for (let x = 0; x < this.playfield[y].length; x++) {
+                playfield[y][x] = this.playfield[y][x];
+            }
+        }
+
+        for (let y = 0; y < this.activePiece.blocks.length; y++) {
+            for (let x = 0; x < this.activePiece.blocks[y].length; x++) {
+                if(this.activePiece.blocks[y][x]) {
+                    playfield[this.activePiece.posY + y][this.activePiece.posX + x] = this.activePiece.blocks[y][x];
+                }
+            }
+        }
+
+        return {
+            playfield,
+        }
+    }
+
+    createPlayfield() {
+        const playfield = [];
+
+        for (let y = 0; y < 20; y++) {
+            playfield[y] = [];
+            for (let x = 0; x < 10; x++) {
+                playfield[y][x] = 0;
+            }
+        }
+
+        return playfield;
+    }
 
     movePieceLeft() {
         this.activePiece.posX -= 1;
@@ -147,12 +162,21 @@ class View {
         this.element.appendChild(this.canvas);
     }
 
+    render({ playfield }) {
+        this.clearScreen();
+        this.renderPlayfield(playfield);
+    }
+
+    clearScreen() {
+        this.context.clearRect(0,0,this.width, this.height);
+    }
+
     renderPlayfield(playfield) {
-        for (let y = 0; y < playfield.length; y++){
+        for (let y = 0; y < playfield.length; y++) {
             const line = playfield[y];
-            for (let x = 0; x < line.length; x++){
+            for (let x = 0; x < line.length; x++) {
                 const block = line[x];
-                if(block){
+                if (block) {
                     this.context.fillStyle = 'red';
                     this.context.strokeStyle = 'black';
                     this.context.lineWidth = '2px';
@@ -181,6 +205,27 @@ const view = new View(root, 320, 640, 20, 10);
 window.game = game;
 window.view = view;
 
-view.renderPlayfield(game.playfield);
+document.addEventListener('keydown', event => {
+    switch (event.keyCode) {
+        case 37: //Left
+            game.movePieceLeft();
+            view.render(game.getState());
+            break;
+        case 38: //Up
+            game.rotatePiece();
+            view.render(game.getState());
+            break;
+        case 39: // Right
+            game.movePieceRight();
+            view.render(game.getState());
+            break;
+        case 40: //Down
+            game.movePieceDown();
+            view.render(game.getState());
+            break;
+    }
+})
+
+view.render(game.getState());
 
 console.log(game);
