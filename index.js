@@ -3,10 +3,10 @@ class Game {
     lines = 0;
     level = 0;
     playfield = [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+        [1, 1, 0, 1, 1, 0, 0, 0, 0, 0],
+        [1, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -61,7 +61,7 @@ class Game {
 
     rotatePiece() {
         this.rotateBlock();
-        if(this.hasCollision()) {
+        if (this.hasCollision()) {
             this.rotateBlock(false);
         }
     }
@@ -76,7 +76,7 @@ class Game {
         for (let i = 0; i < x; i++) {
             for (let j = i; j < y; j++) {
                 const temp = blocks[i][j];
-                if(clockwise) {
+                if (clockwise) {
                     blocks[i][j] = blocks[y - j][i];
                     blocks[y - j][i] = blocks[y - i][y - j];
                     blocks[y - i][y - j] = blocks[j][y - i];
@@ -129,8 +129,58 @@ class Game {
     }
 }
 
+class View {
+    constructor(element, width, height, rows, colomns) {
+        this.element = element;
+        this.width = width;
+        this.height = height;
+        this.colomns = colomns;
+        this.blockWidth = this.width / colomns;
+        this.blockHeight = this.height / rows;
+
+
+        this.canvas = document.createElement('canvas');
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        this.context = this.canvas.getContext('2d');
+
+        this.element.appendChild(this.canvas);
+    }
+
+    renderPlayfield(playfield) {
+        for (let y = 0; y < playfield.length; y++){
+            const line = playfield[y];
+            for (let x = 0; x < line.length; x++){
+                const block = line[x];
+                if(block){
+                    this.context.fillStyle = 'red';
+                    this.context.strokeStyle = 'black';
+                    this.context.lineWidth = '2px';
+
+                    this.context.fillRect(
+                        x * this.blockWidth,
+                        y * this.blockHeight,
+                        this.blockWidth,
+                        this.blockHeight
+                    )
+                }
+            }
+        }
+    }
+
+}
+
+
+
+const root = document.querySelector('#root');
+
 const game = new Game();
 
+const view = new View(root, 320, 640, 20, 10);
+
 window.game = game;
+window.view = view;
+
+view.renderPlayfield(game.playfield);
 
 console.log(game);
