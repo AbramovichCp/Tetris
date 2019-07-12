@@ -3,18 +3,16 @@ class Game {
     lines = 0;
     level = 0;
     playfield = this.createPlayfield();
-    activePiece = {
-        posX: 0,
-        posY: 0,
-        blocks: [
-            [0, 1, 0],
-            [1, 1, 1],
-            [0, 0, 0],
-        ],
-    };
+    activePiece = this.createPiece();
+    nextPiece = this.createPiece();
 
     getState() {
         const playfield = this.createPlayfield();
+        const {
+            posX,
+            posY,
+            blocks
+        } = this.activePiece;
 
         for (let y = 0; y < this.playfield.length; y++) {
             playfield[y] = [];
@@ -23,10 +21,10 @@ class Game {
             }
         }
 
-        for (let y = 0; y < this.activePiece.blocks.length; y++) {
-            for (let x = 0; x < this.activePiece.blocks[y].length; x++) {
-                if(this.activePiece.blocks[y][x]) {
-                    playfield[this.activePiece.posY + y][this.activePiece.posX + x] = this.activePiece.blocks[y][x];
+        for (let y = 0; y < blocks.length; y++) {
+            for (let x = 0; x < blocks[y].length; x++) {
+                if (blocks[y][x]) {
+                    playfield[posY + y][posX + x] = blocks[y][x];
                 }
             }
         }
@@ -47,6 +45,73 @@ class Game {
         }
 
         return playfield;
+    }
+
+    createPiece() {
+        const index = Math.floor(Math.random() * 6);
+        const type = 'IJLOSTZ' [index];
+        const piece = {};
+
+        switch (type) {
+            case 'I':
+                piece.blocks = [
+                    [0, 0, 0, 0],
+                    [1, 1, 1, 1],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                ];
+                break;
+            case 'J':
+                piece.blocks = [
+                    [0, 0, 0],
+                    [2, 2, 2],
+                    [0, 0, 2],
+                ];
+                break;
+            case 'L':
+                piece.blocks = [
+                    [0, 0, 0],
+                    [3, 3, 3],
+                    [3, 0, 0],
+                ];
+                break;
+            case 'O':
+                piece.blocks = [
+                    [0, 0, 0, 0],
+                    [0, 4, 4, 0],
+                    [0, 4, 4, 0],
+                    [0, 0, 0, 0],
+                ];
+                break;
+            case 'S':
+                piece.blocks = [
+                    [0, 0, 0],
+                    [0, 5, 5],
+                    [5, 5, 0],
+                ];
+                break;
+            case 'T':
+                piece.blocks = [
+                    [0, 0, 0],
+                    [6, 6, 6],
+                    [0, 6, 0],
+                ];
+                break;
+            case 'Z':
+                piece.blocks = [
+                    [0, 0, 0],
+                    [7, 7, 0],
+                    [0, 7, 7],
+                ];
+                break;
+            default:
+                throw new Error('Undefined piece');
+
+        }
+
+        piece.posX = Math.floor((10 - piece.blocks[0].length) / 2);
+        piece.posY = 0;
+        return piece;
     }
 
     movePieceLeft() {
@@ -71,6 +136,7 @@ class Game {
         if (this.hasCollision()) {
             this.activePiece.posY -= 1;
             this.lockPiece();
+            this.updatePieces();
         }
     }
 
@@ -142,9 +208,23 @@ class Game {
             }
         }
     }
+
+    updatePieces() {
+        this.activePiece = this.nextPiece;
+        this.nextPiece = this.createPiece();
+    }
 }
 
 class View {
+    static colors = {
+        '1': 'lightblue',
+        '2': 'royalblue',
+        '3': 'orange',
+        '4': 'yellow',
+        '5': 'green',
+        '6': 'blueviolet',
+        '7': 'crimson',
+    }
     constructor(element, width, height, rows, colomns) {
         this.element = element;
         this.width = width;
@@ -162,13 +242,15 @@ class View {
         this.element.appendChild(this.canvas);
     }
 
-    render({ playfield }) {
+    render({
+        playfield
+    }) {
         this.clearScreen();
         this.renderPlayfield(playfield);
     }
 
     clearScreen() {
-        this.context.clearRect(0,0,this.width, this.height);
+        this.context.clearRect(0, 0, this.width, this.height);
     }
 
     renderPlayfield(playfield) {
@@ -177,19 +259,26 @@ class View {
             for (let x = 0; x < line.length; x++) {
                 const block = line[x];
                 if (block) {
-                    this.context.fillStyle = 'red';
-                    this.context.strokeStyle = 'black';
-                    this.context.lineWidth = '2px';
-
-                    this.context.fillRect(
+                    this.renderBlock(
                         x * this.blockWidth,
                         y * this.blockHeight,
                         this.blockWidth,
-                        this.blockHeight
-                    )
+                        this.blockHeight,
+                        View.colors[block]
+                    );
                 }
             }
         }
+    }
+
+    renderBlock(x, y, width, height, color) {
+        this.context.fillStyle = color;
+        this.context.strokeStyle = 'black';
+        this.context.lineWidth = '2px';
+
+        this.context.fillRect(x, y, width, height);
+        this.context.strokeRect(x, y, width, height)
+
     }
 
 }
